@@ -105,7 +105,7 @@ class LabeledStmtVisitor : public RecursiveASTVisitor<LabeledStmtVisitor> {
   // Add a (function,label) -> line number mapping.
   void addToLabelMap(LabelStmt* labelStmt, Stmt* subStmt,
                      const FunctionDecl* func) const {
-    SourceLocation loc = subStmt->getLocStart();
+    SourceLocation loc = subStmt->getBeginLoc();
     unsigned line = srcManager->getExpansionLineNumber(loc);
     std::string labelName(labelStmt->getName());
     const std::string& funcName = func->getName().str();
@@ -201,8 +201,8 @@ class LabeledStmtASTConsumer : public ASTConsumer {
 
 class LabeledStmtFrontendAction : public ASTFrontendAction {
  public:
-  virtual ASTConsumer* CreateASTConsumer(CompilerInstance& CI, StringRef file) {
-    return new LabeledStmtASTConsumer(&CI);
+  virtual std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(CompilerInstance& CI, StringRef file) {
+    return std::unique_ptr<clang::ASTConsumer>{new LabeledStmtASTConsumer(&CI)};
   }
 
   // Write a label to line number mapping to the labelmap file.
@@ -298,7 +298,7 @@ static void cleanup() {
 int main(int argc, const char** argv) {
 #if (LLVM_VERSION == 34)
   CommonOptionsParser op(argc, argv);
-#elif (LLVM_VERSION == 35)
+#else
   CommonOptionsParser op(argc, argv, GetLabelStmtsCat);
 #endif
 
